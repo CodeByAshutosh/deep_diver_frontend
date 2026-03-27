@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { theme } from "./theme";
-import Spinner from "./spinner";
+import Spinner from "./Spinner";
 import Toast from "./Toast";
 import ProgressBar from "./ProgressBar";
 import { API_BASE } from "./config";
