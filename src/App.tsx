@@ -8,7 +8,7 @@ import { theme } from "./theme";
 type View =
   | { type: "home" }
   | { type: "prs"; owner: string; repo: string; prs: any[] }
-  | { type: "slides"; url: string };
+  | { type: "slides"; url: string; previousView: View };
 
 export default function App() {
   const [view, setView] = useState<View>({ type: "home" });
@@ -36,10 +36,10 @@ export default function App() {
 
       <header style={{ textAlign: "center", marginBottom: 40 }}>
         <h1 style={{ fontSize: 48, fontWeight: 800 }}>
-          🚀 PR Slides Studio
+          🎯 Deep Diver
         </h1>
         <p style={{ fontSize: 18, color: theme.colors.textMuted }}>
-          Turn GitHub PRs into beautiful, SDE2‑level slide decks in seconds.
+          Turning PRs into learning lessons in minutes
         </p>
       </header>
 
@@ -65,7 +65,7 @@ export default function App() {
             onBack={() => setView({ type: "home" })}
             onOpenSlides={(url) => {
               setToast({ message: "Opening slides…", type: "success" });
-              setView({ type: "slides", url });
+              setView({ type: "slides", url, previousView: { type: "prs", owner: view.owner, repo: view.repo, prs: view.prs } });
             }}
           />
         </div>
@@ -76,7 +76,7 @@ export default function App() {
         <div style={{ animation: "fadeIn 0.4s ease" }}>
           <SlideViewer
             url={view.url}
-            onBack={() => setView({ type: "home" })}
+            onBack={() => setView(view.previousView)}
           />
         </div>
       )}

@@ -22,7 +22,7 @@ function SlideViewer({ url, onBack }: SlideViewerProps) {
         ← Back
       </button>
 
-      <h2 style={{ fontSize: 32, marginBottom: 20 }}>🎞️ Slide Deck</h2>
+      <h2 style={{ fontSize: 32, marginBottom: 20 }}>📚 Slide Deck</h2>
 
       <iframe
         src={url}
