@@ -3,7 +3,7 @@ import RepoInput from "./RepoInput";
 import PRList from "./PRList";
 import SlideViewer from "./SlideViewer";
 import Toast from "./Toast";
-import { theme } from "./theme";
+import { themes } from "./theme";
 
 type View =
   | { type: "home" }
@@ -13,16 +13,21 @@ type View =
 export default function App() {
   const [view, setView] = useState<View>({ type: "home" });
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [isDark, setIsDark] = useState(true);
+
+  const currentTheme = isDark ? themes.dark : themes.light;
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: `linear-gradient(135deg, ${theme.colors.bg}, #1e1b4b)`,
-        color: theme.colors.text,
-        padding: "40px",
+        background: isDark 
+          ? `linear-gradient(135deg, ${currentTheme.colors.bg}, #1e1b4b)`
+          : `linear-gradient(135deg, ${currentTheme.colors.bg}, #f3f4f6)`,
+        color: currentTheme.colors.text,
+        padding: "40px 20px",
         fontFamily: "Inter, system-ui",
-        transition: "opacity 0.4s ease",
+        transition: "background 0.3s ease, color 0.3s ease",
       }}
     >
       {/* Global Toast */}
@@ -35,18 +40,49 @@ export default function App() {
       )}
 
       <header style={{ textAlign: "center", marginBottom: 40 }}>
-        <h1 style={{ fontSize: 48, fontWeight: 800 }}>
-          🎯 Deep Diver
-        </h1>
-        <p style={{ fontSize: 18, color: theme.colors.textMuted }}>
-          Turning PRs into learning lessons in minutes
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ flex: 1 }} />
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <h1 style={{ fontSize: 48, fontWeight: 800, margin: "0 0 10px 0" }}>
+              🎯 Deep Diver
+            </h1>
+            <p style={{ fontSize: 18, color: currentTheme.colors.textMuted, margin: 0 }}>
+              Turning PRs into learning lessons in minutes
+            </p>
+          </div>
+          <div style={{ flex: 1, textAlign: "right" }}>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              style={{
+                background: "transparent",
+                border: `2px solid ${currentTheme.colors.border}`,
+                color: currentTheme.colors.text,
+                fontSize: 20,
+                padding: "10px 16px",
+                borderRadius: currentTheme.radius,
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = currentTheme.colors.accent;
+                e.currentTarget.style.borderColor = currentTheme.colors.accent;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = currentTheme.colors.border;
+              }}
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* HOME VIEW */}
       {view.type === "home" && (
         <div style={{ animation: "fadeIn 0.4s ease" }}>
           <RepoInput
+            theme={currentTheme}
             onLoaded={(owner, repo, prs) => {
               setToast({ message: "Repository loaded! 🎉", type: "success" });
               setView({ type: "prs", owner, repo, prs });
@@ -62,6 +98,7 @@ export default function App() {
             owner={view.owner}
             repo={view.repo}
             prs={view.prs}
+            theme={currentTheme}
             onBack={() => setView({ type: "home" })}
             onOpenSlides={(url) => {
               setToast({ message: "Opening slides…", type: "success" });

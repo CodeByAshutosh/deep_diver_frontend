@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { theme } from "./theme";
 import { API_BASE } from "./config";
 
+type ThemeType = {
+  colors: Record<string, string>;
+  radius: string;
+  shadow: string;
+};
+
 type RepoInputProps = {
+  theme: ThemeType;
   onLoaded: (owner: string, repo: string, prs: any[]) => void;
 };
 
-function RepoInput({ onLoaded }: RepoInputProps) {
+function RepoInput({ theme, onLoaded }: RepoInputProps) {
   const [repoUrl, setRepoUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   
@@ -55,7 +61,7 @@ function RepoInput({ onLoaded }: RepoInputProps) {
             padding: "14px 18px",
             borderRadius: theme.radius,
             border: `1px solid ${theme.colors.border}`,
-            background: "#1a1f3a",
+            background: theme.colors.bg,
             color: theme.colors.textMuted,
             fontSize: 16,
             width: "200px",
@@ -71,7 +77,7 @@ function RepoInput({ onLoaded }: RepoInputProps) {
             padding: "14px 18px",
             borderRadius: theme.radius,
             border: `1px solid ${theme.colors.border}`,
-            background: "#0f172a",
+            background: theme.colors.bg,
             color: theme.colors.text,
             fontSize: 16,
           }}
@@ -85,7 +91,7 @@ function RepoInput({ onLoaded }: RepoInputProps) {
           width: "100%",
           padding: "14px",
           borderRadius: theme.radius,
-          background: (loading || !isValidUrl) ? "#475569" : theme.colors.accent,
+          background: (loading || !isValidUrl) ? theme.colors.textMuted : theme.colors.accent,
           color: "white",
           fontSize: 18,
           fontWeight: 600,

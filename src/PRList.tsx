@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { theme } from "./theme";
 import Spinner from "./Spinner";
 import Toast from "./Toast";
 import ProgressBar from "./ProgressBar";
@@ -13,6 +12,12 @@ function sparkline() {
   return points.map((p) => chars[p]).join("");
 }
 
+type ThemeType = {
+  colors: Record<string, string>;
+  radius: string;
+  shadow: string;
+};
+
 type PRListProps = {
   owner: string;
   repo: string;
@@ -23,22 +28,31 @@ type PRListProps = {
     updatedAt: string;
     labels: string[];
   }[];
+  theme: ThemeType;
   onBack: () => void;
   onOpenSlides: (url: string) => void;
 };
+
+const ITEMS_PER_PAGE = 12;
 
 export default function PRList({
   owner,
   repo,
   prs,
+  theme,
   onBack,
   onOpenSlides,
 }: PRListProps) {
   const [loadingPR, setLoadingPR] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState<{ message: string; type: any } | null>(
     null
   );
+
+  const totalPages = Math.ceil(prs.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedPRs = prs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   async function generateSlides(prNumber: number) {
     setLoadingPR(prNumber);
@@ -73,7 +87,7 @@ export default function PRList({
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {toast && (
         <Toast
           message={toast.message}
@@ -96,18 +110,24 @@ export default function PRList({
         ← Back
       </button>
 
-      <h2 style={{ fontSize: 32, marginBottom: 20 }}>
-        📂 {owner}/{repo}
-      </h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2 style={{ fontSize: 32, margin: 0 }}>
+          📂 {owner}/{repo}
+        </h2>
+        <span style={{ color: theme.colors.textMuted, fontSize: 14 }}>
+          {prs.length} PRs
+        </span>
+      </div>
 
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
           gap: 20,
+          marginBottom: 40,
         }}
       >
-        {prs.map((pr) => (
+        {paginatedPRs.map((pr) => (
           <div
             key={pr.number}
             style={{
@@ -156,11 +176,12 @@ export default function PRList({
                 borderRadius: theme.radius,
                 background:
                   loadingPR === pr.number
-                    ? "#475569"
+                    ? theme.colors.textMuted
                     : theme.colors.accent,
                 color: "white",
                 fontWeight: 600,
                 cursor: "pointer",
+                border: "none",
               }}
             >
               🎞️ {loadingPR === pr.number ? "Generating…" : "Generate Slides"}
@@ -168,6 +189,63 @@ export default function PRList({
           </div>
         ))}
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 40 }}>
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: "10px 16px",
+              borderRadius: theme.radius,
+              background: currentPage === 1 ? theme.colors.textMuted : theme.colors.accent,
+              color: "white",
+              fontWeight: 600,
+              cursor: currentPage === 1 ? "not-allowed" : "pointer",
+              border: "none",
+              opacity: currentPage === 1 ? 0.5 : 1,
+            }}
+          >
+            ← Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              style={{
+                padding: "10px 14px",
+                borderRadius: theme.radius,
+                background: currentPage === page ? theme.colors.accent : theme.colors.card,
+                color: currentPage === page ? "white" : theme.colors.text,
+                fontWeight: 600,
+                cursor: "pointer",
+                border: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: "10px 16px",
+              borderRadius: theme.radius,
+              background: currentPage === totalPages ? theme.colors.textMuted : theme.colors.accent,
+              color: "white",
+              fontWeight: 600,
+              cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+              border: "none",
+              opacity: currentPage === totalPages ? 0.5 : 1,
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
