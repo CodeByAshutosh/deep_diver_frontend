@@ -9,14 +9,22 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine
+FROM nginx:alpine
 
-WORKDIR /app
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-RUN npm install -g serve
+RUN rm /etc/nginx/conf.d/default.conf
 
-COPY --from=builder /app/dist ./dist
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 3000;
+    location / {
+        root /usr/share/nginx/html;
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOF
 
 EXPOSE 3000
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["nginx", "-g", "daemon off;"]
