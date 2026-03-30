@@ -3,21 +3,25 @@ import AppMain from "./AppMain";
 import { HomePage } from "./HomePage";
 import { AdminAnalytics } from "./AdminAnalytics";
 
-type AppView = "loading" | "auth" | "main" | "analytics";
+type AppView = "auth" | "main" | "analytics";
 
 export default function App() {
-  const [view, setView] = useState<AppView>("loading");
+  const [view, setView] = useState<AppView>("auth");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check auth on mount
-    checkAuthentication();
+    // Slight delay to let HomePage render first
+    const timer = setTimeout(() => {
+      checkAuthentication();
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const checkAuthentication = () => {
     console.log("🔐 Checking authentication...");
     
     const token = localStorage.getItem("authToken");
+    console.log("📋 Token exists:", !!token);
     
     if (token) {
       try {
@@ -38,13 +42,13 @@ export default function App() {
         setView("auth");
       }
     } else {
-      console.log("📵 No token, showing auth");
+      console.log("📵 No token, keeping auth view");
       setView("auth");
     }
   };
 
   const handleAuthSuccess = () => {
-    console.log("✨ Auth success, checking token");
+    console.log("✨ Auth success, reinitializing");
     checkAuthentication();
   };
 
@@ -60,25 +64,7 @@ export default function App() {
     setView("analytics");
   };
 
-  // Only show loading briefly
-  if (view === "loading") {
-    return (
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        background: "#0f172a",
-        color: "#fff",
-        fontSize: "18px",
-        fontFamily: "system-ui"
-      }}>
-        🚀 Loading Deep Diver...
-      </div>
-    );
-  }
-
-  // NOT AUTHENTICATED - Show HomePage with login/signup
+  // ALWAYS show HomePage first (until auth check completes)
   if (view === "auth") {
     return <HomePage onAuthSuccess={handleAuthSuccess} />;
   }
@@ -123,6 +109,6 @@ export default function App() {
     );
   }
 
-  // Fallback (shouldn't happen)
-  return <div>Error: Unknown view state</div>;
+  // Shouldn't reach here
+  return <HomePage onAuthSuccess={handleAuthSuccess} />;
 }
