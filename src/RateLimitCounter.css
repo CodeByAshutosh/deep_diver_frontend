@@ -1,0 +1,119 @@
+.rate-limit-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+}
+
+.rate-limit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rate-limit-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.95;
+}
+
+.rate-limit-count {
+  font-size: 18px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* PROGRESS BAR */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progress-fill.full {
+  background: #f87171;
+}
+
+/* TEXT */
+.remaining-text {
+  font-size: 12px;
+  margin: 0;
+  opacity: 0.9;
+  text-align: center;
+}
+
+/* LIMIT REACHED */
+.limit-reached {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.limit-message {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #fecaca;
+}
+
+.upgrade-btn {
+  background: #fbbf24;
+  color: #111827;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgrade-btn:hover {
+  background: #fcd34d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+/* EXTENSION VERSION - COMPACT */
+.rate-limit-container.compact {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.rate-limit-container.compact .rate-limit-title {
+  font-size: 12px;
+}
+
+.rate-limit-container.compact .rate-limit-count {
+  font-size: 14px;
+  padding: 2px 8px;
+}
+
+.rate-limit-container.compact .progress-bar {
+  height: 6px;
+  margin-bottom: 8px;
+}
+
+.rate-limit-container.compact .remaining-text {
+  font-size: 11px;
+  margin: 0;
+}
