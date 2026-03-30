@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Auth.css";
+import { API_BASE } from "./config";
 
 interface SignUpProps {
   onSuccess?: () => void;
@@ -20,7 +21,7 @@ export function SignUp({ onSuccess }: SignUpProps) {
       const mockToken = `mock_${provider}_token_${Date.now()}`;
       
       // Call backend
-      const res = await fetch("/auth/signup", {
+      const res = await fetch(`${API_BASE}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -33,7 +34,8 @@ export function SignUp({ onSuccess }: SignUpProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error);
+        setError(data.error || "Signup failed");
+        console.error("Signup error:", data);
         return;
       }
 
@@ -41,7 +43,8 @@ export function SignUp({ onSuccess }: SignUpProps) {
       localStorage.setItem("authToken", data.token);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError("Signup failed");
+      setError("Signup failed - " + (err instanceof Error ? err.message : "unknown error"));
+      console.error("Signup catch:", err);
     } finally {
       setLoading(false);
     }

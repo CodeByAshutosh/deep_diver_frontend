@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Auth.css";
+import { API_BASE } from "./config";
 
 interface LogInProps {
   onSuccess?: () => void;
@@ -16,7 +17,7 @@ export function LogIn({ onSuccess }: LogInProps) {
     try {
       const mockToken = `mock_${provider}_token_${Date.now()}`;
 
-      const res = await fetch("/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -28,14 +29,16 @@ export function LogIn({ onSuccess }: LogInProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error);
+        setError(data.error || "Login failed");
+        console.error("Login error:", data);
         return;
       }
 
       localStorage.setItem("authToken", data.token);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError("Login failed");
+      setError("Login failed - " + (err instanceof Error ? err.message : "unknown error"));
+      console.error("Login catch:", err);
     } finally {
       setLoading(false);
     }
