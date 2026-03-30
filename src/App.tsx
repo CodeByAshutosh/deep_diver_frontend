@@ -1,113 +1,67 @@
 import { useEffect, useState } from "react";
 import AppMain from "./AppMain";
-import { SignUp } from "./SignUp";
-import { LogIn } from "./LogIn";
+import { HomePage } from "./HomePage";
 import { AdminAnalytics } from "./AdminAnalytics";
 
-type CurrentView = "loading" | "login" | "signup" | "main" | "analytics";
+type AppView = "loading" | "auth" | "main" | "analytics";
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<CurrentView>("loading");
+  const [view, setView] = useState<AppView>("loading");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Force a tiny delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      initializeAuth();
-    }, 100);
-    return () => clearTimeout(timer);
+    // Check auth on mount
+    checkAuthentication();
   }, []);
 
-  const initializeAuth = () => {
-    console.log("🔐 Initializing auth...");
+  const checkAuthentication = () => {
+    console.log("🔐 Checking authentication...");
     
     const token = localStorage.getItem("authToken");
-    console.log("📋 Token exists:", !!token);
-
+    
     if (token) {
       try {
-        // Decode JWT
+        // Validate token format
         const parts = token.split('.');
         if (parts.length !== 3) {
           throw new Error("Invalid token format");
         }
+        
         const payload = JSON.parse(atob(parts[1]));
-        console.log("✅ Token decoded, isAdmin:", payload.isAdmin);
+        console.log("✅ Token valid, user:", payload.email);
         
         setIsAdmin(payload.isAdmin || false);
-        setCurrentView("main");
+        setView("main");
       } catch (e) {
-        console.error("❌ Token decode failed:", e);
+        console.error("❌ Token invalid:", e);
         localStorage.removeItem("authToken");
-        setCurrentView("login");
+        setView("auth");
       }
     } else {
-      console.log("📵 No token, showing login");
-      setCurrentView("login");
+      console.log("📵 No token, showing auth");
+      setView("auth");
     }
   };
 
-  const handleHashChange = () => {
-    const hash = window.location.hash.slice(1);
-    console.log("🔗 Hash changed to:", hash);
-    
-    const token = localStorage.getItem("authToken");
-    
-    if (hash === "logout") {
-      handleLogout();
-      window.location.hash = "";
-      return;
-    }
-
-    if (!token) {
-      // No token - only allow login/signup views
-      if (hash === "signup") {
-        setCurrentView("signup");
-      } else {
-        setCurrentView("login");
-      }
-    } else {
-      // Has token - allow any view
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        
-        if (hash === "analytics" && payload.isAdmin) {
-          setCurrentView("analytics");
-        } else if (hash === "signup") {
-          setCurrentView("signup");
-        } else {
-          setCurrentView("main");
-        }
-      } catch {
-        setCurrentView("main");
-      }
-    }
+  const handleAuthSuccess = () => {
+    console.log("✨ Auth success, checking token");
+    checkAuthentication();
   };
-
-  useEffect(() => {
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
 
   const handleLogout = () => {
-    console.log("🚪 Logging out...");
+    console.log("🚪 Logging out");
     localStorage.removeItem("authToken");
     setIsAdmin(false);
-    setCurrentView("login");
+    setView("auth");
   };
 
-  const handleLoginSuccess = () => {
-    console.log("✨ Login successful, reinitializing auth");
-    initializeAuth();
+  const handleViewAnalytics = () => {
+    console.log("📊 Viewing analytics");
+    setView("analytics");
   };
 
-  const handleSignupSuccess = () => {
-    console.log("✨ Signup successful, reinitializing auth");
-    initializeAuth();
-  };
-
-  // Show loading screen while initializing
-  if (currentView === "loading") {
+  // Only show loading briefly
+  if (view === "loading") {
     return (
       <div style={{
         display: "flex",
@@ -116,57 +70,59 @@ export default function App() {
         height: "100vh",
         background: "#0f172a",
         color: "#fff",
-        fontSize: "20px",
+        fontSize: "18px",
         fontFamily: "system-ui"
       }}>
-        Loading Deep Diver...
+        🚀 Loading Deep Diver...
       </div>
     );
   }
 
-  return (
-    <>
-      {currentView === "login" && (
-        <LogIn onSuccess={handleLoginSuccess} />
-      )}
-      {currentView === "signup" && (
-        <SignUp onSuccess={handleSignupSuccess} />
-      )}
-      {currentView === "main" && (
-        <AppMain
-          isAdmin={isAdmin}
-          onLogout={handleLogout}
-          onViewAnalytics={() => {
-            window.location.hash = "analytics";
-            setCurrentView("analytics");
+  // NOT AUTHENTICATED - Show HomePage with login/signup
+  if (view === "auth") {
+    return <HomePage onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  // AUTHENTICATED - Show MainApp
+  if (view === "main") {
+    return (
+      <AppMain
+        isAdmin={isAdmin}
+        onLogout={handleLogout}
+        onViewAnalytics={handleViewAnalytics}
+      />
+    );
+  }
+
+  // ANALYTICS - Admin only
+  if (view === "analytics" && isAdmin) {
+    return (
+      <>
+        <button
+          onClick={() => {
+            handleLogout();
+            setView("auth");
           }}
-        />
-      )}
-      {currentView === "analytics" && isAdmin && (
-        <>
-          <button
-            onClick={() => {
-              handleLogout();
-              window.location.hash = "";
-            }}
-            style={{
-              position: "fixed",
-              top: 20,
-              right: 20,
-              padding: "10px 20px",
-              background: "#667eea",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              zIndex: 1000,
-            }}
-          >
-            Logout
-          </button>
-          <AdminAnalytics />
-        </>
-      )}
-    </>
-  );
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            padding: "10px 20px",
+            background: "#667eea",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            zIndex: 1000,
+          }}
+        >
+          Logout
+        </button>
+        <AdminAnalytics />
+      </>
+    );
+  }
+
+  // Fallback (shouldn't happen)
+  return <div>Error: Unknown view state</div>;
 }
