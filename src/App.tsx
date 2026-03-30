@@ -7,26 +7,32 @@ import { AdminAnalytics } from "./AdminAnalytics";
 type CurrentView = "login" | "signup" | "main" | "analytics";
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<CurrentView>("main");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentView, setCurrentView] = useState<CurrentView>("login");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("authToken");
+      const hash = window.location.hash.slice(1);
+      
       if (token) {
         // Decode JWT to check isAdmin (basic check without verification)
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
-          setIsAuthenticated(true);
           setIsAdmin(payload.isAdmin || false);
-          setCurrentView("main");
+          
+          // Check for hash navigation after auth
+          if (hash === "signup") setCurrentView("signup");
+          else if (hash === "analytics" && payload.isAdmin) setCurrentView("analytics");
+          else setCurrentView("main");
         } catch (e) {
           localStorage.removeItem("authToken");
           setCurrentView("login");
         }
       } else {
-        setCurrentView("login");
+        // No token - show login/signup based on hash or default to login
+        if (hash === "signup") setCurrentView("signup");
+        else setCurrentView("login");
       }
     };
 
@@ -35,9 +41,21 @@ export default function App() {
     // Listen for URL hash changes
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);
-      if (hash === "signup") setCurrentView("signup");
-      else if (hash === "analytics" && isAdmin) setCurrentView("analytics");
-      else setCurrentView("main");
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        if (hash === "signup") setCurrentView("signup");
+        else setCurrentView("login");
+      } else {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (hash === "signup") setCurrentView("signup");
+          else if (hash === "analytics" && payload.isAdmin) setCurrentView("analytics");
+          else setCurrentView("main");
+        } catch {
+          setCurrentView("login");
+        }
+      }
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -46,7 +64,6 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
     setIsAdmin(false);
     setCurrentView("login");
   };
@@ -60,7 +77,6 @@ export default function App() {
             if (token) {
               try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                setIsAuthenticated(true);
                 setIsAdmin(payload.isAdmin || false);
                 setCurrentView("main");
               } catch (e) {
@@ -77,7 +93,6 @@ export default function App() {
             if (token) {
               try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                setIsAuthenticated(true);
                 setIsAdmin(payload.isAdmin || false);
                 setCurrentView("main");
               } catch (e) {
@@ -87,7 +102,7 @@ export default function App() {
           }}
         />
       )}
-      {currentView === "main" && isAuthenticated && (
+      {currentView === "main" && (
         <AppMain 
           isAdmin={isAdmin}
           onLogout={handleLogout}
