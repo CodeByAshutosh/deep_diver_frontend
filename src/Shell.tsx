@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { API_BASE } from "./config";
 import "./Shell.css";
 
-type Mode = "landing" | "guest" | "login" | "signup" | "app" | "paywall";
+type Mode = "landing" | "guest" | "login" | "signup" | "app" | "paywall" | "slides";
 
 interface GuestData {
   prCount: number;
@@ -18,6 +18,7 @@ export default function Shell() {
   const [prLink, setPrLink] = useState("");
   const [guestData, setGuestData] = useState<GuestData>({ prCount: 0, generatedPRs: [] });
   const [generating, setGenerating] = useState(false);
+  const [currentSlideUrl, setCurrentSlideUrl] = useState("");
 
   // Check on mount: token → app, no token → landing or guest
   useEffect(() => {
@@ -96,13 +97,23 @@ export default function Shell() {
         throw new Error(data.error || "Failed to generate slides");
       }
 
-      // Success: increment count
+      const data = await res.json();
+      
+      // Success: increment count and display slides
       const newCount = guestData.prCount + 1;
       const newPRs = [...guestData.generatedPRs, prLink];
       const newGuestData = { prCount: newCount, generatedPRs: newPRs };
       
       localStorage.setItem("guestData", JSON.stringify(newGuestData));
       setGuestData(newGuestData);
+      
+      // Store and display the slide URL
+      const slideUrl = data.slidesUrl || data.url;
+      if (slideUrl) {
+        setCurrentSlideUrl(slideUrl);
+        setMode("slides");
+      }
+      
       setPrLink("");
 
     } catch (err) {
@@ -281,6 +292,53 @@ export default function Shell() {
               </button>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // SLIDES VIEW (Display generated slides)
+  if (mode === "slides") {
+    const remaining = 5 - guestData.prCount;
+    return (
+      <div className="shell-app">
+        <div className="shell-app-header">
+          <div>
+            <h1>🎯 Deep Diver</h1>
+            <p className="shell-guest-badge">Free Trial • {guestData.prCount}/5 PRs Used</p>
+          </div>
+          <div className="shell-header-actions">
+            <button 
+              className="shell-btn secondary"
+              onClick={() => setMode("guest")}
+            >
+              ← Back to Generator
+            </button>
+          </div>
+        </div>
+
+        <div className="shell-app-content">
+          <div className="shell-progress">
+            <div className="shell-progress-label">
+              <span>{guestData.prCount} of 5 free slides used</span>
+              <span>{remaining} remaining</span>
+            </div>
+            <div className="shell-progress-bar">
+              <div 
+                className="shell-progress-fill"
+                style={{ width: `${(guestData.prCount / 5) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="shell-slides-container">
+            <iframe
+              src={currentSlideUrl}
+              title="PR Slides"
+              className="shell-slides-iframe"
+              frameBorder="0"
+            />
+          </div>
         </div>
       </div>
     );
