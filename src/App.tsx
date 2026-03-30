@@ -1,93 +1,79 @@
-import { useEffect, useState } from "react";
-import AppMain from "./AppMain";
+import { useState } from "react";
+import { LandingPage } from "./LandingPage";
 import { HomePage } from "./HomePage";
+import AppMain from "./AppMain";
 import { AdminAnalytics } from "./AdminAnalytics";
 
-type AppView = "auth" | "main" | "analytics";
+type AppState = "landing" | "auth" | "main" | "analytics";
 
 export default function App() {
-  const [view, setView] = useState<AppView>("auth");
+  const [state, setState] = useState<AppState>("landing");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    // Slight delay to let HomePage render first
-    const timer = setTimeout(() => {
-      checkAuthentication();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleEnterApp = () => {
+    console.log("🌍 User entered app, checking auth...");
+    checkAuth();
+  };
 
-  const checkAuthentication = () => {
-    console.log("🔐 Checking authentication...");
-    
+  const checkAuth = () => {
     const token = localStorage.getItem("authToken");
-    console.log("📋 Token exists:", !!token);
     
     if (token) {
       try {
-        // Validate token format
         const parts = token.split('.');
-        if (parts.length !== 3) {
-          throw new Error("Invalid token format");
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          setIsAdmin(payload.isAdmin || false);
+          setState("main");
+          return;
         }
-        
-        const payload = JSON.parse(atob(parts[1]));
-        console.log("✅ Token valid, user:", payload.email);
-        
-        setIsAdmin(payload.isAdmin || false);
-        setView("main");
       } catch (e) {
-        console.error("❌ Token invalid:", e);
-        localStorage.removeItem("authToken");
-        setView("auth");
+        console.error("Token error:", e);
       }
-    } else {
-      console.log("📵 No token, keeping auth view");
-      setView("auth");
     }
+    
+    setState("auth");
   };
 
   const handleAuthSuccess = () => {
-    console.log("✨ Auth success, reinitializing");
-    checkAuthentication();
+    checkAuth();
   };
 
   const handleLogout = () => {
-    console.log("🚪 Logging out");
     localStorage.removeItem("authToken");
     setIsAdmin(false);
-    setView("auth");
+    setState("landing");
   };
 
-  const handleViewAnalytics = () => {
-    console.log("📊 Viewing analytics");
-    setView("analytics");
-  };
+  // Landing page - shown first, no conditions
+  if (state === "landing") {
+    return <LandingPage onEnter={handleEnterApp} />;
+  }
 
-  // ALWAYS show HomePage first (until auth check completes)
-  if (view === "auth") {
+  // Auth page - login/signup
+  if (state === "auth") {
     return <HomePage onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // AUTHENTICATED - Show MainApp
-  if (view === "main") {
+  // Main app - authenticated
+  if (state === "main") {
     return (
       <AppMain
         isAdmin={isAdmin}
         onLogout={handleLogout}
-        onViewAnalytics={handleViewAnalytics}
+        onViewAnalytics={() => setState("analytics")}
       />
     );
   }
 
-  // ANALYTICS - Admin only
-  if (view === "analytics" && isAdmin) {
+  // Analytics - admin only
+  if (state === "analytics" && isAdmin) {
     return (
       <>
         <button
           onClick={() => {
             handleLogout();
-            setView("auth");
+            setState("landing");
           }}
           style={{
             position: "fixed",
@@ -109,6 +95,5 @@ export default function App() {
     );
   }
 
-  // Shouldn't reach here
-  return <HomePage onAuthSuccess={handleAuthSuccess} />;
+  return <LandingPage onEnter={handleEnterApp} />;
 }
