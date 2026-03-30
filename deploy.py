@@ -7,7 +7,7 @@ from azure.mgmt.appcontainers import ContainerAppsAPIClient
 subscription_id = "4e78cd80-41c7-4f58-b92b-334cde20f39b"
 resource_group = "deep-diver-rg"
 container_app_name = "pr-slides-frontend"
-image = "shuklaashu1/pr-slides-frontend:v3"
+image = "shuklaashu1/pr-slides-frontend:v5"
 
 # Environment variables
 env_vars = [

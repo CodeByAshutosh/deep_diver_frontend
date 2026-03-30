@@ -5,7 +5,7 @@ $tenantId = "2b08247b-be82-4b00-ad96-ca1606b8b51a"
 $subscriptionId = "4e78cd80-41c7-4f58-b92b-334cde20f39b"
 $resourceGroup = "deep-diver-rg"
 $containerAppName = "pr-slides-frontend"
-$image = "shuklaashu1/pr-slides-frontend:v3"
+$image = "shuklaashu1/pr-slides-frontend:v5"
 
 function Get-AzureToken {
     $deviceCodeUri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/devicecode"
