@@ -1,0 +1,391 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html, #root {
+  width: 100%;
+  height: 100%;
+  font-family: "Inter", system-ui;
+}
+
+/* LANDING PAGE */
+.shell-landing {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.shell-content {
+  text-align: center;
+  color: white;
+  max-width: 600px;
+}
+
+.shell-logo {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.shell-content h1 {
+  font-size: 56px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.shell-content > p {
+  font-size: 18px;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+.shell-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.shell-feature {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shell-feature span {
+  font-size: 35px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.shell-feature h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.shell-feature p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.shell-cta {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.shell-btn {
+  padding: 14px 35px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shell-btn.primary {
+  background: white;
+  color: #667eea;
+}
+
+.shell-btn.primary:hover {
+  transform: translateY(-2px);
+}
+
+.shell-btn.secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.shell-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* AUTH PAGES */
+.shell-auth {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.shell-auth-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+}
+
+.shell-back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #667eea;
+  font-weight: 600;
+  padding: 5px;
+}
+
+.shell-back:hover {
+  text-decoration: underline;
+}
+
+.shell-auth-card h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #1a202c;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.shell-auth-card > p {
+  text-align: center;
+  color: #718096;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.shell-error {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 4px solid #c53030;
+}
+
+.shell-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.shell-oauth-btn {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.shell-oauth-btn:hover:not(:disabled) {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.shell-oauth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shell-divider {
+  text-align: center;
+  color: #cbd5e0;
+  margin: 20px 0;
+  position: relative;
+}
+
+.shell-divider::before,
+.shell-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 48%;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.shell-divider::before {
+  left: 0;
+}
+
+.shell-divider::after {
+  right: 0;
+}
+
+.shell-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.shell-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.shell-submit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 15px;
+}
+
+.shell-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.shell-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shell-toggle {
+  text-align: center;
+  font-size: 14px;
+  color: #718096;
+}
+
+.shell-link {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.shell-link:hover {
+  text-decoration: underline;
+}
+
+/* MAIN APP */
+.shell-app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  padding: 40px 20px;
+  color: white;
+}
+
+.shell-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 50px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.shell-app-header h1 {
+  font-size: 32px;
+}
+
+.shell-logout {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.shell-logout:hover {
+  background: #764ba2;
+}
+
+.shell-app-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.shell-input-section h2 {
+  font-size: 24px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.shell-input-large {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 15px;
+  margin-bottom: 15px;
+  font-family: inherit;
+}
+
+.shell-input-large::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.shell-input-large:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shell-submit-large {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shell-submit-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 768px) {
+  .shell-content h1 {
+    font-size: 40px;
+  }
+
+  .shell-cta {
+    flex-direction: column;
+  }
+
+  .shell-btn {
+    width: 100%;
+  }
+
+  .shell-features {
+    grid-template-columns: 1fr;
+  }
+}
