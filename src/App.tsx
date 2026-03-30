@@ -54,10 +54,38 @@ export default function App() {
   return (
     <>
       {currentView === "login" && (
-        <LogIn />
+        <LogIn 
+          onSuccess={() => {
+            const token = localStorage.getItem("authToken");
+            if (token) {
+              try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setIsAuthenticated(true);
+                setIsAdmin(payload.isAdmin || false);
+                setCurrentView("main");
+              } catch (e) {
+                console.error("Failed to decode token");
+              }
+            }
+          }}
+        />
       )}
       {currentView === "signup" && (
-        <SignUp />
+        <SignUp 
+          onSuccess={() => {
+            const token = localStorage.getItem("authToken");
+            if (token) {
+              try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setIsAuthenticated(true);
+                setIsAdmin(payload.isAdmin || false);
+                setCurrentView("main");
+              } catch (e) {
+                console.error("Failed to decode token");
+              }
+            }
+          }}
+        />
       )}
       {currentView === "main" && isAuthenticated && (
         <AppMain 

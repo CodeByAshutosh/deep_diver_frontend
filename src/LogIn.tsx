@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 
-export function LogIn() {
+interface LogInProps {
+  onSuccess?: () => void;
+}
+
+export function LogIn({ onSuccess }: LogInProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleOAuth = async (provider: "github" | "google" | "microsoft") => {
     setLoading(true);
@@ -31,7 +33,7 @@ export function LogIn() {
       }
 
       localStorage.setItem("authToken", data.token);
-      navigate("/dashboard");
+      if (onSuccess) onSuccess();
     } catch (err) {
       setError("Login failed");
     } finally {
@@ -101,7 +103,7 @@ export function LogIn() {
 
         <p className="auth-footer">
           Don't have an account?{" "}
-          <a href="/signup" className="link">
+          <a href="#" onClick={() => window.location.hash = "signup"} className="link">
             Sign Up
           </a>
         </p>

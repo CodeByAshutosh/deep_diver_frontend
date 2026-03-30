@@ -10,7 +10,13 @@ type View =
   | { type: "prs"; owner: string; repo: string; prs: any[] }
   | { type: "slides"; url: string; previousView: View };
 
-export default function App() {
+interface AppMainProps {
+  isAdmin?: boolean;
+  onLogout?: () => void;
+  onViewAnalytics?: () => void;
+}
+
+export default function AppMain({ isAdmin, onLogout, onViewAnalytics }: AppMainProps) {
   const [view, setView] = useState<View>({ type: "home" });
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [isDark, setIsDark] = useState(true);
@@ -50,7 +56,24 @@ export default function App() {
               Turning PRs into learning lessons in minutes
             </p>
           </div>
-          <div style={{ flex: 1, textAlign: "right" }}>
+           <div style={{ flex: 1, textAlign: "right", display: "flex", gap: 10, justifyContent: "flex-end", alignItems: "center" }}>
+            {isAdmin && (
+              <button
+                onClick={onViewAnalytics}
+                style={{
+                  background: currentTheme.colors.accent,
+                  border: `2px solid ${currentTheme.colors.accent}`,
+                  color: "white",
+                  fontSize: 14,
+                  padding: "8px 16px",
+                  borderRadius: currentTheme.radius,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                📊 Analytics
+              </button>
+            )}
             <button
               onClick={() => setIsDark(!isDark)}
               style={{
@@ -74,6 +97,23 @@ export default function App() {
             >
               {isDark ? "☀️" : "🌙"}
             </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                style={{
+                  background: "transparent",
+                  border: `2px solid ${currentTheme.colors.border}`,
+                  color: currentTheme.colors.text,
+                  fontSize: 14,
+                  padding: "8px 16px",
+                  borderRadius: currentTheme.radius,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </header>
