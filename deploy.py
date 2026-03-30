@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import sys
 import os
-from azure.identity import InteractiveBrowserCredential
+from azure.identity import DefaultAzureCredential
 from azure.mgmt.appcontainers import ContainerAppsAPIClient
 
 subscription_id = "4e78cd80-41c7-4f58-b92b-334cde20f39b"
-tenant_id = "2b08247b-be82-4b00-ad96-ca1606b8b51a"
 resource_group = "deep-diver-rg"
 container_app_name = "pr-slides-frontend"
-image = "shuklaashu1/pr-slides-frontend:v2"
+image = "shuklaashu1/pr-slides-frontend:v3"
 
 # Environment variables
 env_vars = [
@@ -18,7 +17,7 @@ env_vars = [
 try:
     # Authenticate
     print("Logging in to Azure...")
-    credential = InteractiveBrowserCredential(tenant_id=tenant_id)
+    credential = DefaultAzureCredential()
     
     # Create client
     client = ContainerAppsAPIClient(credential, subscription_id)

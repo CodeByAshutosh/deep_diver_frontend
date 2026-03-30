@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { API_BASE } from "./config";
 import "./Shell.css";
 
-type Mode = "landing" | "login" | "signup" | "app";
+type Mode = "landing" | "guest" | "login" | "signup" | "app" | "paywall";
+
+interface GuestData {
+  prCount: number;
+  generatedPRs: string[];
+}
 
 export default function Shell() {
   const [mode, setMode] = useState<Mode>("landing");
@@ -10,18 +15,78 @@ export default function Shell() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [prLink, setPrLink] = useState("");
+  const [guestData, setGuestData] = useState<GuestData>({ prCount: 0, generatedPRs: [] });
+  const [generating, setGenerating] = useState(false);
 
-  // Check if user has a valid token on mount
+  // Check on mount: token → app, no token → landing or guest
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      // User has a token, show app
       setMode("app");
     } else {
-      // No token, show landing
-      setMode("landing");
+      // Check if guest data exists
+      const guestStr = localStorage.getItem("guestData");
+      if (guestStr) {
+        try {
+          const guest = JSON.parse(guestStr);
+          setGuestData(guest);
+          setMode("guest");
+        } catch {
+          setMode("landing");
+        }
+      } else {
+        setMode("landing");
+      }
     }
   }, []);
+
+  // Generate slides for guest users
+  const handleGuestGenerate = async () => {
+    if (!prLink.trim()) {
+      setError("Please enter a PR link");
+      return;
+    }
+
+    // Check if already at limit
+    if (guestData.prCount >= 5) {
+      setMode("paywall");
+      return;
+    }
+
+    setGenerating(true);
+    setError("");
+    try {
+      // Simulate API call (in real app, would call backend)
+      const res = await fetch(`${API_BASE}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prUrl: prLink }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to generate slides");
+      }
+
+      // Success: increment count
+      const newCount = guestData.prCount + 1;
+      const newPRs = [...guestData.generatedPRs, prLink];
+      const newGuestData = { prCount: newCount, generatedPRs: newPRs };
+      
+      localStorage.setItem("guestData", JSON.stringify(newGuestData));
+      setGuestData(newGuestData);
+      setPrLink("");
+
+      // If just hit limit, show paywall on next attempt
+      if (newCount >= 5) {
+        // Show success but hint about paywall
+      }
+    } catch (err) {
+      setError("Error: " + (err instanceof Error ? err.message : "unknown"));
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleAuth = async (provider: "github" | "google" | "microsoft") => {
     setLoading(true);
@@ -47,7 +112,8 @@ export default function Shell() {
         return;
       }
 
-      // Success
+      // Success: clear guest data and set auth token
+      localStorage.removeItem("guestData");
       localStorage.setItem("authToken", data.token);
       
       setMode("app");
@@ -62,9 +128,11 @@ export default function Shell() {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("guestData");
     setMode("landing");
     setEmail("");
     setName("");
+    setGuestData({ prCount: 0, generatedPRs: [] });
   };
 
   // LANDING PAGE
@@ -85,7 +153,7 @@ export default function Shell() {
             <div className="shell-feature">
               <span>⚡</span>
               <h3>5 Free Slides</h3>
-              <p>Test it out first</p>
+              <p>No signup needed</p>
             </div>
             <div className="shell-feature">
               <span>🔗</span>
@@ -95,13 +163,155 @@ export default function Shell() {
           </div>
 
           <div className="shell-cta">
-            <button className="shell-btn primary" onClick={() => setMode("login")}>
-              Log In
+            <button className="shell-btn primary" onClick={() => setMode("guest")}>
+              Try for Free (5 PRs)
             </button>
-            <button className="shell-btn secondary" onClick={() => setMode("signup")}>
-              Sign Up
+            <button className="shell-btn secondary" onClick={() => setMode("login")}>
+              Sign In
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // GUEST MODE (Free tier - up to 5 PRs)
+  if (mode === "guest") {
+    const remaining = 5 - guestData.prCount;
+    return (
+      <div className="shell-app">
+        <div className="shell-app-header">
+          <div>
+            <h1>🎯 Deep Diver</h1>
+            <p className="shell-guest-badge">Free Trial • {guestData.prCount}/5 PRs Used</p>
+          </div>
+          <div className="shell-header-actions">
+            <button 
+              className="shell-btn secondary" 
+              onClick={() => setMode("login")}
+              style={{ marginRight: "10px" }}
+            >
+              Sign In
+            </button>
+            <button 
+              className="shell-btn secondary" 
+              onClick={() => setMode("signup")}
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+        
+        <div className="shell-app-content">
+          {/* Progress Bar */}
+          <div className="shell-progress">
+            <div className="shell-progress-label">
+              <span>{guestData.prCount} of 5 free slides used</span>
+              <span>{remaining} remaining</span>
+            </div>
+            <div className="shell-progress-bar">
+              <div 
+                className="shell-progress-fill"
+                style={{ width: `${(guestData.prCount / 5) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="shell-input-section">
+            <h2>Generate Your {guestData.prCount + 1}st PR Slide</h2>
+            <input
+              type="text"
+              placeholder="https://github.com/owner/repo or owner/repo/pull/123"
+              value={prLink}
+              onChange={(e) => setPrLink(e.target.value)}
+              disabled={generating}
+              className="shell-input-large"
+            />
+            <button
+              className="shell-submit-large"
+              onClick={handleGuestGenerate}
+              disabled={generating || remaining <= 0}
+            >
+              {generating ? "Generating..." : remaining > 0 ? "Generate Slides" : "Limit Reached"}
+            </button>
+          </div>
+
+          {error && <div className="shell-error">{error}</div>}
+
+          {remaining === 1 && (
+            <div className="shell-warning">
+              ⚠️ <strong>1 slide remaining!</strong> Sign up to unlock unlimited slides.
+            </div>
+          )}
+
+          {remaining === 0 && (
+            <div className="shell-upgrade-cta">
+              <h3>You've Generated 5 Free Slides!</h3>
+              <p>Sign up to unlock unlimited PR slides and keep building knowledge.</p>
+              <button 
+                className="shell-btn primary"
+                onClick={() => setMode("signup")}
+              >
+                Create Free Account
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // PAYWALL (After 5 PRs, force signup)
+  if (mode === "paywall") {
+    return (
+      <div className="shell-auth">
+        <div className="shell-paywall-card">
+          <div className="shell-paywall-header">
+            <div className="shell-paywall-icon">🎉</div>
+            <h2>Limit Reached!</h2>
+            <p>You've used all 5 free PR slides</p>
+          </div>
+
+          <div className="shell-paywall-benefits">
+            <h3>Sign Up to Unlock:</h3>
+            <ul>
+              <li>✅ Unlimited PR slides</li>
+              <li>✅ Save & share collections</li>
+              <li>✅ Team collaboration</li>
+              <li>✅ Advanced analytics</li>
+            </ul>
+          </div>
+
+          <div className="shell-oauth">
+            <button 
+              className="shell-oauth-btn" 
+              onClick={() => { setMode("signup"); handleAuth("github"); }} 
+              disabled={loading}
+            >
+              ⭐ Continue with GitHub
+            </button>
+            <button 
+              className="shell-oauth-btn" 
+              onClick={() => { setMode("signup"); handleAuth("google"); }} 
+              disabled={loading}
+            >
+              🔵 Continue with Google
+            </button>
+            <button 
+              className="shell-oauth-btn" 
+              onClick={() => { setMode("signup"); handleAuth("microsoft"); }} 
+              disabled={loading}
+            >
+              ◻️ Continue with Microsoft
+            </button>
+          </div>
+
+          <button 
+            className="shell-back" 
+            onClick={() => setMode("guest")}
+          >
+            ← Go Back
+          </button>
         </div>
       </div>
     );
@@ -114,8 +324,8 @@ export default function Shell() {
         <div className="shell-auth-card">
           <button className="shell-back" onClick={() => setMode("landing")}>← Back</button>
           
-          <h2>Log In</h2>
-          <p>Welcome back to Deep Diver</p>
+          <h2>Welcome Back</h2>
+          <p>Sign in to your account</p>
 
           {error && <div className="shell-error">{error}</div>}
 
@@ -147,11 +357,11 @@ export default function Shell() {
             onClick={() => handleAuth("github")}
             disabled={loading || !email}
           >
-            {loading ? "Logging in..." : "Log In"}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
 
           <p className="shell-toggle">
-            Don't have an account? <button className="shell-link" onClick={() => setMode("signup")}>Sign up</button>
+            Don't have an account? <button className="shell-link" onClick={() => setMode("signup")}>Create one</button>
           </p>
         </div>
       </div>
@@ -166,7 +376,7 @@ export default function Shell() {
           <button className="shell-back" onClick={() => setMode("landing")}>← Back</button>
           
           <h2>Create Account</h2>
-          <p>Get 5 free PR slides</p>
+          <p>Get unlimited PR slides</p>
 
           {error && <div className="shell-error">{error}</div>}
 
@@ -210,14 +420,14 @@ export default function Shell() {
           </button>
 
           <p className="shell-toggle">
-            Already have an account? <button className="shell-link" onClick={() => setMode("login")}>Log in</button>
+            Already have an account? <button className="shell-link" onClick={() => setMode("login")}>Sign in</button>
           </p>
         </div>
       </div>
     );
   }
 
-  // MAIN APP
+  // MAIN APP (Authenticated users)
   if (mode === "app") {
     return (
       <div className="shell-app">
