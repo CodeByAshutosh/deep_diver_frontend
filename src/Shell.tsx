@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { API_BASE } from "./config";
 import "./Shell.css";
 
@@ -10,6 +10,18 @@ export default function Shell() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if user has a valid token on mount
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      // User has a token, show app
+      setMode("app");
+    } else {
+      // No token, show landing
+      setMode("landing");
+    }
+  }, []);
 
   const handleAuth = async (provider: "github" | "google" | "microsoft") => {
     setLoading(true);
