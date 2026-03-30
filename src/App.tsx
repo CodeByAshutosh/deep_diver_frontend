@@ -4,109 +4,142 @@ import { SignUp } from "./SignUp";
 import { LogIn } from "./LogIn";
 import { AdminAnalytics } from "./AdminAnalytics";
 
-type CurrentView = "login" | "signup" | "main" | "analytics";
+type CurrentView = "loading" | "login" | "signup" | "main" | "analytics";
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<CurrentView>("login");
+  const [currentView, setCurrentView] = useState<CurrentView>("loading");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("authToken");
-      const hash = window.location.hash.slice(1);
-      
-      if (token) {
-        // Decode JWT to check isAdmin (basic check without verification)
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          setIsAdmin(payload.isAdmin || false);
-          
-          // Check for hash navigation after auth
-          if (hash === "signup") setCurrentView("signup");
-          else if (hash === "analytics" && payload.isAdmin) setCurrentView("analytics");
-          else setCurrentView("main");
-        } catch (e) {
-          localStorage.removeItem("authToken");
-          setCurrentView("login");
+    // Force a tiny delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      initializeAuth();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const initializeAuth = () => {
+    console.log("🔐 Initializing auth...");
+    
+    const token = localStorage.getItem("authToken");
+    console.log("📋 Token exists:", !!token);
+
+    if (token) {
+      try {
+        // Decode JWT
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          throw new Error("Invalid token format");
         }
-      } else {
-        // No token - show login/signup based on hash or default to login
-        if (hash === "signup") setCurrentView("signup");
-        else setCurrentView("login");
+        const payload = JSON.parse(atob(parts[1]));
+        console.log("✅ Token decoded, isAdmin:", payload.isAdmin);
+        
+        setIsAdmin(payload.isAdmin || false);
+        setCurrentView("main");
+      } catch (e) {
+        console.error("❌ Token decode failed:", e);
+        localStorage.removeItem("authToken");
+        setCurrentView("login");
       }
-    };
+    } else {
+      console.log("📵 No token, showing login");
+      setCurrentView("login");
+    }
+  };
 
-    checkAuth();
+  const handleHashChange = () => {
+    const hash = window.location.hash.slice(1);
+    console.log("🔗 Hash changed to:", hash);
+    
+    const token = localStorage.getItem("authToken");
+    
+    if (hash === "logout") {
+      handleLogout();
+      window.location.hash = "";
+      return;
+    }
 
-    // Listen for URL hash changes
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-        if (hash === "signup") setCurrentView("signup");
-        else setCurrentView("login");
+    if (!token) {
+      // No token - only allow login/signup views
+      if (hash === "signup") {
+        setCurrentView("signup");
       } else {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          if (hash === "signup") setCurrentView("signup");
-          else if (hash === "analytics" && payload.isAdmin) setCurrentView("analytics");
-          else setCurrentView("main");
-        } catch {
-          setCurrentView("login");
+        setCurrentView("login");
+      }
+    } else {
+      // Has token - allow any view
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        
+        if (hash === "analytics" && payload.isAdmin) {
+          setCurrentView("analytics");
+        } else if (hash === "signup") {
+          setCurrentView("signup");
+        } else {
+          setCurrentView("main");
         }
+      } catch {
+        setCurrentView("main");
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   const handleLogout = () => {
+    console.log("🚪 Logging out...");
     localStorage.removeItem("authToken");
     setIsAdmin(false);
     setCurrentView("login");
   };
 
+  const handleLoginSuccess = () => {
+    console.log("✨ Login successful, reinitializing auth");
+    initializeAuth();
+  };
+
+  const handleSignupSuccess = () => {
+    console.log("✨ Signup successful, reinitializing auth");
+    initializeAuth();
+  };
+
+  // Show loading screen while initializing
+  if (currentView === "loading") {
+    return (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "#0f172a",
+        color: "#fff",
+        fontSize: "20px",
+        fontFamily: "system-ui"
+      }}>
+        Loading Deep Diver...
+      </div>
+    );
+  }
+
   return (
     <>
       {currentView === "login" && (
-        <LogIn 
-          onSuccess={() => {
-            const token = localStorage.getItem("authToken");
-            if (token) {
-              try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                setIsAdmin(payload.isAdmin || false);
-                setCurrentView("main");
-              } catch (e) {
-                console.error("Failed to decode token");
-              }
-            }
-          }}
-        />
+        <LogIn onSuccess={handleLoginSuccess} />
       )}
       {currentView === "signup" && (
-        <SignUp 
-          onSuccess={() => {
-            const token = localStorage.getItem("authToken");
-            if (token) {
-              try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                setIsAdmin(payload.isAdmin || false);
-                setCurrentView("main");
-              } catch (e) {
-                console.error("Failed to decode token");
-              }
-            }
-          }}
-        />
+        <SignUp onSuccess={handleSignupSuccess} />
       )}
       {currentView === "main" && (
-        <AppMain 
+        <AppMain
           isAdmin={isAdmin}
           onLogout={handleLogout}
-          onViewAnalytics={() => setCurrentView("analytics")}
+          onViewAnalytics={() => {
+            window.location.hash = "analytics";
+            setCurrentView("analytics");
+          }}
         />
       )}
       {currentView === "analytics" && isAdmin && (
@@ -114,7 +147,7 @@ export default function App() {
           <button
             onClick={() => {
               handleLogout();
-              setCurrentView("login");
+              window.location.hash = "";
             }}
             style={{
               position: "fixed",
