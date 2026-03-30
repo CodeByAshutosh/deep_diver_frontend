@@ -15,7 +15,7 @@ resource_group = "deep-diver-rg"
 
 # Target: frontend with v3 image
 container_app_name = "pr-slides-frontend"
-image = "shuklaashu1/pr-slides-frontend:v3"
+image = "shuklaashu1/pr-slides-frontend:v4"
 
 try:
     # Authenticate

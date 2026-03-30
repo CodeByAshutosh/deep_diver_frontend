@@ -41,6 +41,22 @@ export default function Shell() {
     }
   }, []);
 
+  // Parse PR URL into owner, repo, prNumber
+  const parsePRUrl = (url: string): { owner?: string; repo?: string; prNumber?: string } => {
+    try {
+      // Support formats: https://github.com/owner/repo/pull/123, owner/repo/pull/123, owner/repo#123
+      const match = url.match(/(?:https?:\/\/github\.com\/)?([^/]+)\/([^/]+)(?:\/pull\/(\d+)|#(\d+))?/);
+      if (match) {
+        return {
+          owner: match[1],
+          repo: match[2],
+          prNumber: match[3] || match[4],
+        };
+      }
+    } catch {}
+    return {};
+  };
+
   // Generate slides for guest users
   const handleGuestGenerate = async () => {
     if (!prLink.trim()) {
@@ -57,15 +73,27 @@ export default function Shell() {
     setGenerating(true);
     setError("");
     try {
-      // Simulate API call (in real app, would call backend)
-      const res = await fetch(`${API_BASE}/generate`, {
-        method: "POST",
+      const parsed = parsePRUrl(prLink);
+      if (!parsed.owner || !parsed.repo || !parsed.prNumber) {
+        setError("Please enter a valid PR URL (e.g., owner/repo/pull/123 or https://github.com/owner/repo/pull/123)");
+        setGenerating(false);
+        return;
+      }
+
+      // Call backend /generate endpoint (no auth required for guest)
+      const url = new URL(`${API_BASE}/generate`);
+      url.searchParams.set("owner", parsed.owner);
+      url.searchParams.set("repo", parsed.repo);
+      url.searchParams.set("prNumber", parsed.prNumber);
+
+      const res = await fetch(url.toString(), {
+        method: "GET",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prUrl: prLink }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to generate slides");
+        const data = await res.json();
+        throw new Error(data.error || "Failed to generate slides");
       }
 
       // Success: increment count
@@ -77,10 +105,6 @@ export default function Shell() {
       setGuestData(newGuestData);
       setPrLink("");
 
-      // If just hit limit, show paywall on next attempt
-      if (newCount >= 5) {
-        // Show success but hint about paywall
-      }
     } catch (err) {
       setError("Error: " + (err instanceof Error ? err.message : "unknown"));
     } finally {
@@ -93,7 +117,8 @@ export default function Shell() {
     setError("");
     try {
       const mockToken = `mock_${provider}_token_${Date.now()}`;
-      const endpoint = mode === "signup" ? "/auth/signup" : "/auth/login";
+      // Use /auth/login for both login and signup - backend will handle it
+      const endpoint = "/auth/login";
 
       const res = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
